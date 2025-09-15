@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Campus Event Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Admin Dashboard</h1>
+    <a href="{{ url_for('create_event') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Create Event
+    </a>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-5">
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total Events</h5>
+                        <h2 class="mb-0">{{ total_events }}</h2>
+                    </div>
+                    <div>
+                        <i class="bi bi-calendar3 display-6"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Total Students</h5>
+                        <h2 class="mb-0">{{ total_students }}</h2>
+                    </div>
+                    <div>
+                        <i class="bi bi-people display-6"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Upcoming Events</h5>
+                        <h2 class="mb-0">{{ upcoming_events|length }}</h2>
+                    </div>
+                    <div>
+                        <i class="bi bi-calendar-check display-6"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Recent Events</h5>
+                        <h2 class="mb-0">{{ recent_events|length }}</h2>
+                    </div>
+                    <div>
+                        <i class="bi bi-clock display-6"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Upcoming Events -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Upcoming Events</h5>
+                <a href="{{ url_for('manage_events') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if upcoming_events %}
+                    {% for event in upcoming_events %}
+                        <div class="d-flex justify-content-between align-items-start mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <div>
+                                <h6 class="mb-1">{{ event.title }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>{{ format_datetime(event.start_time) }}
+                                </small><br>
+                                <small class="text-muted">
+                                    <i class="bi bi-geo-alt me-1"></i>{{ event.venue or 'TBD' }}
+                                </small>
+                            </div>
+                            <span class="badge bg-{{ 'success' if event.event_type == 'hackathon' else 'info' if event.event_type == 'workshop' else 'warning' if event.event_type == 'tech_talk' else 'primary' }}">
+                                {{ event.event_type.replace('_', ' ').title() }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No upcoming events scheduled.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Events -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Events</h5>
+                <a href="{{ url_for('reports') }}" class="btn btn-sm btn-outline-primary">View Reports</a>
+            </div>
+            <div class="card-body">
+                {% if recent_events %}
+                    {% for event in recent_events %}
+                        <div class="d-flex justify-content-between align-items-start mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <div>
+                                <h6 class="mb-1">{{ event.title }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-people me-1"></i>{{ event.registration_count }} registered
+                                </small><br>
+                                <small class="text-muted">
+                                    <i class="bi bi-check-circle me-1"></i>{{ event.check_in_count }} checked in
+                                </small>
+                            </div>
+                            <span class="badge bg-{{ 'success' if event.event_type == 'hackathon' else 'info' if event.event_type == 'workshop' else 'warning' if event.event_type == 'tech_talk' else 'primary' }}">
+                                {{ event.event_type.replace('_', ' ').title() }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No recent events found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('create_event') }}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-plus-circle me-2"></i>Create Event
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('manage_events') }}" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-calendar3 me-2"></i>Manage Events
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('reports') }}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-graph-up me-2"></i>View Reports
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('browse_events') }}" class="btn btn-outline-success w-100">
+                            <i class="bi bi-eye me-2"></i>Preview Student View
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

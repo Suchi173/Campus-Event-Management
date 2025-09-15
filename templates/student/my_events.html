@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}My Events - Campus Event Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>My Events</h1>
+    <a href="{{ url_for('browse_events') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-2"></i>Find More Events
+    </a>
+</div>
+
+{% if registrations %}
+    <div class="row">
+        {% for registration in registrations %}
+            {% set event = registration.event %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span class="badge bg-{{ 'success' if event.event_type == 'hackathon' else 'info' if event.event_type == 'workshop' else 'warning' if event.event_type == 'tech_talk' else 'primary' }}">
+                            {{ event.event_type.replace('_', ' ').title() }}
+                        </span>
+                        <span class="badge bg-{{ 'success' if registration.status == 'confirmed' else 'warning' if registration.status == 'pending' else 'secondary' }}">
+                            {{ registration.status.title() }}
+                        </span>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ event.title }}</h5>
+                        {% if event.description %}
+                            <p class="card-text text-muted">
+                                {{ event.description[:150] }}{% if event.description|length > 150 %}...{% endif %}
+                            </p>
+                        {% endif %}
+                        
+                        <div class="mt-auto">
+                            <div class="mb-3">
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-calendar me-1"></i>{{ format_datetime(event.start_time) }}
+                                    {% if event.end_time %}
+                                        to {{ format_datetime(event.end_time) }}
+                                    {% endif %}
+                                </small>
+                                {% if event.venue %}
+                                    <small class="text-muted d-block">
+                                        <i class="bi bi-geo-alt me-1"></i>{{ event.venue }}
+                                    </small>
+                                {% endif %}
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-person-check me-1"></i>Registered: {{ format_datetime(registration.registered_at) }}
+                                </small>
+                            </div>
+                            
+                            <!-- Check-in Status and Actions -->
+                            {% set checkin = current_user.check_ins | selectattr('event_id', 'equalto', event.id) | first %}
+                            {% if checkin %}
+                                <div class="alert alert-success py-2 mb-2">
+                                    <small><i class="bi bi-check-circle me-1"></i>Checked in: {{ format_datetime(checkin.check_in_time) }}</small>
+                                </div>
+                            {% elif registration.status == 'confirmed' %}
+                                {% if event.start_time <= now and event.end_time >= now %}
+                                    <form method="POST" action="{{ url_for('checkin_event', event_id=event.id) }}" class="mb-2">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="bi bi-check-circle me-2"></i>Check In Now
+                                        </button>
+                                    </form>
+                                {% elif event.start_time > now %}
+                                    <div class="alert alert-info py-2 mb-2">
+                                        <small><i class="bi bi-info-circle me-1"></i>Check-in will be available during the event</small>
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-warning py-2 mb-2">
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>Event has ended</small>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            
+                            <!-- Event Status and Actions -->
+                            {% if registration.status == 'confirmed' and event.start_time > now %}
+                                <form method="POST" action="{{ url_for('cancel_registration', event_id=event.id) }}" 
+                                      onsubmit="return confirm('Are you sure you want to cancel your registration?')">
+                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                        <i class="bi bi-x-circle me-2"></i>Cancel Registration
+                                    </button>
+                                </form>
+                            {% elif event.start_time <= now and event.end_time >= now %}
+                                <div class="alert alert-primary py-2 mb-0">
+                                    <small><i class="bi bi-play-circle me-1"></i>Event is currently ongoing</small>
+                                </div>
+                            {% elif event.end_time < now %}
+                                <div class="alert alert-secondary py-2 mb-0">
+                                    <small><i class="bi bi-check-all me-1"></i>Event completed</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-calendar-x display-1 text-muted"></i>
+        <h4 class="mt-3">No Events Registered</h4>
+        <p class="text-muted">You haven't registered for any events yet.</p>
+        <a href="{{ url_for('browse_events') }}" class="btn btn-primary">
+            <i class="bi bi-search me-2"></i>Browse Available Events
+        </a>
+    </div>
+{% endif %}
+
+<!-- Summary Statistics -->
+{% if registrations %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>My Event Activity Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <h4 class="text-primary">{{ registrations|length }}</h4>
+                                <small class="text-muted">Total Registrations</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                {% set confirmed_count = registrations | selectattr('status', 'equalto', 'confirmed') | list | length %}
+                                <h4 class="text-success">{{ confirmed_count }}</h4>
+                                <small class="text-muted">Confirmed Events</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                {% set checkin_count = current_user.check_ins | length %}
+                                <h4 class="text-info">{{ checkin_count }}</h4>
+                                <small class="text-muted">Events Attended</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                {% if confirmed_count > 0 %}
+                                    {% set attendance_rate = ((checkin_count / confirmed_count) * 100) | round(1) %}
+                                    <h4 class="text-warning">{{ attendance_rate }}%</h4>
+                                {% else %}
+                                    <h4 class="text-muted">N/A</h4>
+                                {% endif %}
+                                <small class="text-muted">Attendance Rate</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

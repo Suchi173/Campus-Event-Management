@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section py-5 mb-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">Campus Event Management</h1>
+            <p class="lead mb-4">
+                Discover, register, and participate in exciting campus events. From hackathons to workshops, 
+                tech talks to festivals - your gateway to campus life.
+            </p>
+            <div class="d-flex gap-3">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-person-plus me-2"></i>Get Started
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="text-center">
+                <i class="bi bi-calendar-event display-1 text-primary"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar3 display-4 text-primary mb-3"></i>
+                <h5 class="card-title">Browse Events</h5>
+                <p class="card-text">
+                    Discover a wide variety of campus events including hackathons, workshops, 
+                    tech talks, and festivals.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-person-check display-4 text-success mb-3"></i>
+                <h5 class="card-title">Easy Registration</h5>
+                <p class="card-text">
+                    Simple one-click registration for events with instant confirmation 
+                    and reminders.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up display-4 text-info mb-3"></i>
+                <h5 class="card-title">Track Participation</h5>
+                <p class="card-text">
+                    Keep track of your event participation and build your campus 
+                    involvement portfolio.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center py-5">
+                <h3 class="mb-3">Ready to Get Started?</h3>
+                <p class="lead mb-4">
+                    Join thousands of students who are already using our platform to stay connected with campus life.
+                </p>
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                    <i class="bi bi-person-plus me-2"></i>Register Now
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

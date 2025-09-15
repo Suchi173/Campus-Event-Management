@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - Campus Event Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1>Welcome, {{ current_user.full_name }}!</h1>
+        <p class="text-muted">{{ current_user.college.name }} • {{ current_user.department or 'Student' }}</p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar3 display-4 mb-3"></i>
+                <h5>Browse Events</h5>
+                <p class="mb-3">Discover exciting campus events</p>
+                <a href="{{ url_for('browse_events') }}" class="btn btn-light">
+                    <i class="bi bi-arrow-right me-1"></i>Browse Now
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-person-check display-4 mb-3"></i>
+                <h5>My Events</h5>
+                <p class="mb-3">View your registered events</p>
+                <a href="{{ url_for('my_events') }}" class="btn btn-light">
+                    <i class="bi bi-arrow-right me-1"></i>View Events
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up display-4 mb-3"></i>
+                <h5>My Activity</h5>
+                <p class="mb-3">{{ my_registrations|length }} events registered</p>
+                <a href="{{ url_for('my_events') }}" class="btn btn-light">
+                    <i class="bi bi-arrow-right me-1"></i>View Details
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Upcoming Events -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Upcoming Events</h5>
+                <a href="{{ url_for('browse_events') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if upcoming_events %}
+                    {% for event in upcoming_events %}
+                        <div class="d-flex justify-content-between align-items-start mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ event.title }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>{{ format_datetime(event.start_time) }}
+                                </small><br>
+                                <small class="text-muted">
+                                    <i class="bi bi-geo-alt me-1"></i>{{ event.venue or 'TBD' }}
+                                </small><br>
+                                <small class="text-muted">
+                                    <i class="bi bi-people me-1"></i>{{ event.registration_count }} registered
+                                    {% if event.max_participants %} / {{ event.max_participants }}{% endif %}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{{ 'success' if event.event_type == 'hackathon' else 'info' if event.event_type == 'workshop' else 'warning' if event.event_type == 'tech_talk' else 'primary' }} mb-2">
+                                    {{ event.event_type.replace('_', ' ').title() }}
+                                </span>
+                                {% if event.is_registration_open %}
+                                    <br><small class="text-success">Registration Open</small>
+                                {% else %}
+                                    <br><small class="text-danger">Registration Closed</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No upcoming events at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- My Recent Registrations -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">My Recent Registrations</h5>
+                <a href="{{ url_for('my_events') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if my_registrations %}
+                    {% for registration in my_registrations %}
+                        {% set event = registration.event %}
+                        <div class="d-flex justify-content-between align-items-start mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ event.title }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>{{ format_datetime(event.start_time) }}
+                                </small><br>
+                                <small class="text-muted">
+                                    Registered: {{ format_datetime(registration.registered_at) }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-{{ 'success' if registration.status == 'confirmed' else 'warning' if registration.status == 'pending' else 'secondary' }} mb-2">
+                                    {{ registration.status.title() }}
+                                </span>
+                                {% set checkin = registration.user.check_ins | selectattr('event_id', 'equalto', event.id) | first %}
+                                {% if checkin %}
+                                    <br><small class="text-success"><i class="bi bi-check-circle me-1"></i>Checked In</small>
+                                {% elif event.start_time <= now and event.end_time >= now %}
+                                    <br><form method="POST" action="{{ url_for('checkin_event', event_id=event.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-check-circle me-1"></i>Check In
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2 mb-0">No events registered yet.</p>
+                        <a href="{{ url_for('browse_events') }}" class="btn btn-primary btn-sm mt-2">
+                            <i class="bi bi-search me-1"></i>Find Events
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Types Overview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Available Event Types</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2 mb-3">
+                        <div class="p-3">
+                            <i class="bi bi-laptop display-4 text-success mb-2"></i>
+                            <h6>Hackathons</h6>
+                            <small class="text-muted">Coding competitions</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="p-3">
+                            <i class="bi bi-tools display-4 text-info mb-2"></i>
+                            <h6>Workshops</h6>
+                            <small class="text-muted">Hands-on learning</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="p-3">
+                            <i class="bi bi-mic display-4 text-warning mb-2"></i>
+                            <h6>Tech Talks</h6>
+                            <small class="text-muted">Industry insights</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="p-3">
+                            <i class="bi bi-music-note display-4 text-primary mb-2"></i>
+                            <h6>Fests</h6>
+                            <small class="text-muted">Cultural events</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="p-3">
+                            <i class="bi bi-book display-4 text-danger mb-2"></i>
+                            <h6>Seminars</h6>
+                            <small class="text-muted">Educational talks</small>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="p-3">
+                            <i class="bi bi-trophy display-4 text-secondary mb-2"></i>
+                            <h6>Competitions</h6>
+                            <small class="text-muted">Various contests</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
