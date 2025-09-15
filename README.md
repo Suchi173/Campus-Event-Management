@@ -19,7 +19,6 @@ A complete web application built on Flask for overseeing campus events at variou
 ## Tech Stack
 - Backend: Flask(Python)
 - DataBase: MySQL Workbench
-- API Testing: Postman
 
 ## Data to Track
 - **Event** creation & metadata (type, time window, capacity, status)
